@@ -1,0 +1,1052 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Cyberpunk Neon Runner - Speed & Slow Pads</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@500;700&display=swap');
+
+        * {
+            user-select: none;
+            -webkit-user-select: none;
+            touch-action: manipulation;
+        }
+
+        body {
+            font-family: 'Orbitron', sans-serif;
+            background-color: #05050d;
+            color: #fff;
+            overflow: hidden;
+        }
+
+        .font-rajdhani {
+            font-family: 'Rajdhani', sans-serif;
+        }
+
+        /* Neon Glow Effects */
+        .glow-cyan {
+            text-shadow: 0 0 10px #00f3ff, 0 0 20px #00f3ff, 0 0 40px #00f3ff;
+        }
+        .glow-pink {
+            text-shadow: 0 0 10px #ff0055, 0 0 20px #ff0055, 0 0 40px #ff0055;
+        }
+        .glow-yellow {
+            text-shadow: 0 0 10px #ffe600, 0 0 20px #ffe600;
+        }
+
+        .box-glow-cyan {
+            box-shadow: 0 0 15px rgba(0, 243, 255, 0.4), inset 0 0 15px rgba(0, 243, 255, 0.2);
+            border: 1px solid #00f3ff;
+        }
+        .box-glow-pink {
+            box-shadow: 0 0 15px rgba(255, 0, 85, 0.4), inset 0 0 15px rgba(255, 0, 85, 0.2);
+            border: 1px solid #ff0055;
+        }
+
+        /* Glassmorphism */
+        .glass-panel {
+            background: rgba(10, 10, 26, 0.75);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(0, 243, 255, 0.2);
+        }
+
+        /* Custom Touch Buttons */
+        .touch-btn {
+            background: rgba(15, 23, 42, 0.6);
+            border: 2px solid rgba(0, 243, 255, 0.5);
+            backdrop-filter: blur(5px);
+            transition: all 0.1s ease;
+        }
+        .touch-btn:active, .touch-btn.active {
+            background: rgba(0, 243, 255, 0.4);
+            border-color: #00f3ff;
+            transform: scale(0.95);
+            box-shadow: 0 0 15px #00f3ff;
+        }
+
+        .touch-btn-red {
+            border-color: rgba(255, 0, 85, 0.5);
+        }
+        .touch-btn-red:active, .touch-btn-red.active {
+            background: rgba(255, 0, 85, 0.4);
+            border-color: #ff0055;
+            box-shadow: 0 0 15px #ff0055;
+        }
+
+        /* Scanline effect */
+        .scanlines {
+            background: linear-gradient(
+                to bottom,
+                rgba(255,255,255,0),
+                rgba(255,255,255,0) 50%,
+                rgba(0, 0, 0, 0.3) 50%,
+                rgba(0, 0, 0, 0.3)
+            );
+            background-size: 100% 4px;
+        }
+    </style>
+</head>
+<body class="flex flex-col items-center justify-center min-h-screen w-full relative">
+
+    <!-- Screen Scanlines Effect -->
+    <div class="pointer-events-none absolute inset-0 z-40 scanlines opacity-40"></div>
+
+    <!-- Main Container -->
+    <div id="game-container" class="relative w-full h-screen max-w-5xl max-h-[900px] flex flex-col justify-between p-2 sm:p-4 overflow-hidden select-none">
+        
+        <!-- TOP HUD PANEL -->
+        <div class="z-20 flex justify-between items-center w-full glass-panel rounded-xl p-3 sm:p-4 shadow-2xl">
+            <!-- Score & Distance -->
+            <div class="flex flex-col">
+                <span class="text-xs text-cyan-400 font-rajdhani uppercase tracking-widest">JARAK / SKOR</span>
+                <span id="score-val" class="text-xl sm:text-3xl font-black text-white glow-cyan">0m</span>
+            </div>
+
+            <!-- Multiplier & Speed Boost indicator -->
+            <div class="flex items-center gap-3">
+                <div class="text-center">
+                    <span class="text-[10px] sm:text-xs text-pink-400 font-rajdhani uppercase tracking-wider block">MULTIPLIER</span>
+                    <span id="multiplier-val" class="text-lg sm:text-2xl font-bold text-pink-500 glow-pink">x1.0</span>
+                </div>
+                <!-- Status Badge -->
+                <div id="status-badge" class="hidden sm:flex items-center px-3 py-1 rounded-full bg-cyan-950 border border-cyan-400 text-cyan-300 text-xs font-bold animate-pulse">
+                    <i class="fa-solid fa-bolt mr-1"></i> NORMAL
+                </div>
+            </div>
+
+            <!-- Nitro Gauge -->
+            <div class="w-28 sm:w-44 flex flex-col">
+                <div class="flex justify-between items-center mb-1">
+                    <span class="text-[10px] sm:text-xs text-yellow-400 font-rajdhani uppercase font-bold">NITRO BOOST</span>
+                    <span id="nitro-text" class="text-[10px] sm:text-xs text-yellow-300 font-mono">100%</span>
+                </div>
+                <div class="w-full bg-gray-900 h-3 rounded-full overflow-hidden border border-yellow-500/30">
+                    <div id="nitro-bar" class="h-full bg-gradient-to-r from-yellow-500 via-amber-400 to-yellow-300 w-full transition-all duration-100 shadow-[0_0_10px_#f59e0b]"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- CANVAS GAME AREA -->
+        <div class="relative flex-1 w-full my-2 rounded-2xl overflow-hidden border border-cyan-500/30 shadow-[0_0_30px_rgba(0,243,255,0.15)] bg-slate-950">
+            <canvas id="gameCanvas" class="w-full h-full block"></canvas>
+
+            <!-- START / GAME OVER OVERLAY -->
+            <div id="menu-overlay" class="absolute inset-0 z-30 flex flex-col items-center justify-center glass-panel p-6 text-center">
+                <h1 class="text-3xl sm:text-6xl font-black text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-pink-500 to-yellow-400 glow-cyan mb-2">
+                    CYBERPUNK
+                </h1>
+                <h2 class="text-lg sm:text-2xl font-bold text-cyan-300 tracking-widest mb-6">NEON RUNNER</h2>
+
+                <!-- Legend / Info Pad Pad -->
+                <div class="grid grid-cols-2 gap-3 mb-6 max-w-md w-full text-left text-xs sm:text-sm font-rajdhani bg-black/50 p-3 rounded-lg border border-cyan-500/20">
+                    <div class="flex items-center gap-2">
+                        <div class="w-8 h-8 rounded bg-cyan-900/80 border border-cyan-400 flex items-center justify-center text-cyan-300 font-bold shadow-[0_0_8px_#00f3ff]">
+                            ▲
+                        </div>
+                        <div>
+                            <div class="text-cyan-300 font-bold">LAPU PAD (BOOST)</div>
+                            <div class="text-gray-400 text-[11px]">Panah Ke Atas (+Akselerasi)</div>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <div class="w-8 h-8 rounded bg-rose-950/80 border border-rose-500 flex items-center justify-center text-rose-400 font-bold shadow-[0_0_8px_#ff0055]">
+                            ▼
+                        </div>
+                        <div>
+                            <div class="text-rose-400 font-bold">PERLAMBAT PAD</div>
+                            <div class="text-gray-400 text-[11px]">Panah Ke Bawah (-Kecepatan)</div>
+                        </div>
+                    </div>
+                </div>
+
+                <p id="overlay-msg" class="text-gray-300 text-sm sm:text-base mb-6 max-w-sm">
+                    Gunakan Tombol Panah / WASD atau Touch Pad di layar untuk mengemudi dan menghindari rintangan!
+                </p>
+
+                <button id="start-btn" class="px-8 py-3 rounded-full bg-gradient-to-r from-cyan-500 to-blue-600 text-black font-black text-lg tracking-wider hover:scale-105 active:scale-95 transition-all shadow-[0_0_20px_#00f3ff] flex items-center gap-2">
+                    <i class="fa-solid fa-play"></i> MULAI BALAPAN
+                </button>
+            </div>
+        </div>
+
+        <!-- BOTTOM HUD & CONTROLS -->
+        <div class="z-20 flex justify-between items-end w-full gap-2">
+            
+            <!-- Left Touch Controls (Steering D-Pad) -->
+            <div class="flex gap-2 sm:hidden">
+                <button id="btn-left" class="touch-btn w-14 h-14 rounded-xl flex items-center justify-center text-cyan-400 text-2xl active:bg-cyan-500/40">
+                    <i class="fa-solid fa-chevron-left"></i>
+                </button>
+                <button id="btn-right" class="touch-btn w-14 h-14 rounded-xl flex items-center justify-center text-cyan-400 text-2xl active:bg-cyan-500/40">
+                    <i class="fa-solid fa-chevron-right"></i>
+                </button>
+            </div>
+
+            <!-- SPEEDOMETER ANALOG & DIGITAL CENTER -->
+            <div class="glass-panel rounded-xl px-4 py-2 flex items-center gap-3 border-cyan-500/30 mx-auto sm:mx-0">
+                <div class="relative w-12 h-12 flex items-center justify-center">
+                    <svg class="w-full h-full -rotate-90" viewBox="0 0 36 36">
+                        <path class="text-gray-800" stroke-width="3" stroke="currentColor" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                        <path id="speed-gauge" class="text-cyan-400 transition-all duration-75" stroke-dasharray="0, 100" stroke-width="3" stroke-linecap="round" stroke="currentColor" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                    </svg>
+                    <i class="fa-solid fa-gauge-high absolute text-cyan-400 text-xs"></i>
+                </div>
+                <div class="flex flex-col">
+                    <span class="text-[10px] text-gray-400 font-rajdhani">KECEPATAN</span>
+                    <span id="speed-text" class="text-2xl font-black text-cyan-300 font-mono leading-none">0 <span class="text-xs text-gray-400 font-normal">KM/H</span></span>
+                </div>
+            </div>
+
+            <!-- Right Touch Controls (Action Buttons) -->
+            <div class="flex gap-2 sm:hidden">
+                <button id="btn-brake" class="touch-btn touch-btn-red w-14 h-14 rounded-xl flex items-center justify-center text-rose-500 text-xl">
+                    <i class="fa-solid fa-hand"></i>
+                </button>
+                <button id="btn-nitro" class="touch-btn w-14 h-14 rounded-xl flex items-center justify-center text-yellow-400 text-xl border-yellow-500/50">
+                    <i class="fa-solid fa-bolt"></i>
+                </button>
+            </div>
+
+            <!-- Mute Audio Toggle Button (Desktop/Mobile) -->
+            <button id="audio-btn" class="hidden sm:flex items-center justify-center w-10 h-10 rounded-lg glass-panel text-cyan-400 hover:text-white transition">
+                <i class="fa-solid fa-volume-high"></i>
+            </button>
+        </div>
+
+    </div>
+
+    <!-- GAME ENGINE & LOGIC SCRIPT -->
+    <script>
+        // WEB AUDIO SYNTHESIZER FOR CYBERPUNK SOUNDS
+        class SoundEngine {
+            constructor() {
+                this.ctx = null;
+                this.muted = false;
+                this.engineOsc = null;
+                this.engineGain = null;
+                this.initialized = false;
+            }
+
+            init() {
+                if (this.initialized) return;
+                try {
+                    const AudioContext = window.AudioContext || window.webkitAudioContext;
+                    this.ctx = new AudioContext();
+                    this.initialized = true;
+                    this.startEngineSound();
+                } catch (e) {
+                    console.log("Audio Context not allowed yet.");
+                }
+            }
+
+            startEngineSound() {
+                if (!this.ctx || this.muted) return;
+                try {
+                    this.engineOsc = this.ctx.createOscillator();
+                    this.engineGain = this.ctx.createGain();
+
+                    this.engineOsc.type = 'sawtooth';
+                    this.engineOsc.frequency.setValueAtTime(40, this.ctx.currentTime); // Pitch awal mesin
+
+                    // Low pass filter untuk suara mesin cyberpunk bassy
+                    const filter = this.ctx.createBiquadFilter();
+                    filter.type = 'lowpass';
+                    filter.frequency.setValueAtTime(250, this.ctx.currentTime);
+
+                    this.engineGain.gain.setValueAtTime(0.05, this.ctx.currentTime);
+
+                    this.engineOsc.connect(filter);
+                    filter.connect(this.engineGain);
+                    this.engineGain.connect(this.ctx.destination);
+
+                    this.engineOsc.start();
+                } catch(e){}
+            }
+
+            updateEngine(speedRatio) {
+                if (!this.ctx || !this.engineOsc || this.muted) return;
+                const freq = 40 + (speedRatio * 120);
+                this.engineOsc.frequency.setTargetAtTime(freq, this.ctx.currentTime, 0.1);
+            }
+
+            playBoostSound() {
+                if (!this.ctx || this.muted) return;
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(300, this.ctx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(800, this.ctx.currentTime + 0.3);
+
+                gain.gain.setValueAtTime(0.2, this.ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.3);
+
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+                osc.start();
+                osc.stop(this.ctx.currentTime + 0.3);
+            }
+
+            playSlowSound() {
+                if (!this.ctx || this.muted) return;
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(200, this.ctx.currentTime);
+                osc.frequency.linearRampToValueAtTime(60, this.ctx.currentTime + 0.3);
+
+                gain.gain.setValueAtTime(0.2, this.ctx.currentTime);
+                gain.gain.linearRampToValueAtTime(0.01, this.ctx.currentTime + 0.3);
+
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+                osc.start();
+                osc.stop(this.ctx.currentTime + 0.3);
+            }
+
+            playCrashSound() {
+                if (!this.ctx || this.muted) return;
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.type = 'square';
+                osc.frequency.setValueAtTime(100, this.ctx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(30, this.ctx.currentTime + 0.5);
+
+                gain.gain.setValueAtTime(0.4, this.ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.5);
+
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+                osc.start();
+                osc.stop(this.ctx.currentTime + 0.5);
+            }
+        }
+
+        const audio = new SoundEngine();
+
+        // GAME INITIALIZATION & SETUP
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+
+        // UI Elements
+        const scoreValEl = document.getElementById('score-val');
+        const speedTextEl = document.getElementById('speed-text');
+        const speedGaugeEl = document.getElementById('speed-gauge');
+        const nitroBarEl = document.getElementById('nitro-bar');
+        const nitroTextEl = document.getElementById('nitro-text');
+        const multiplierValEl = document.getElementById('multiplier-val');
+        const statusBadgeEl = document.getElementById('status-badge');
+        const menuOverlay = document.getElementById('menu-overlay');
+        const overlayMsg = document.getElementById('overlay-msg');
+        const startBtn = document.getElementById('start-btn');
+        const audioBtn = document.getElementById('audio-btn');
+
+        // Game Variables
+        let isGameRunning = false;
+        let animationFrameId = null;
+        let distanceScored = 0;
+        let gameTime = 0;
+        let animOffset = 0; // For pad arrow animation loop
+
+        // Player Car State
+        const player = {
+            x: 0,
+            y: 0,
+            width: 44,
+            height: 75,
+            speed: 0,
+            maxSpeed: 14,
+            baseMaxSpeed: 14,
+            boostMaxSpeed: 22,
+            acceleration: 0.25,
+            friction: 0.96,
+            steerSpeed: 6.5,
+            nitro: 100,
+            isBoosting: false,
+            isSlowed: false,
+            boostTimer: 0,
+            slowTimer: 0,
+            trail: []
+        };
+
+        // Track & Road Settings
+        let trackWidth = 360;
+        let roadXMin = 0;
+        let roadXMax = 0;
+
+        // Entities arrays
+        let pads = [];
+        let obstacles = [];
+        let particles = [];
+
+        // Controls State
+        const keys = {
+            left: false,
+            right: false,
+            up: false,
+            down: false,
+            nitro: false
+        };
+
+        // Canvas Resize Handler
+        function resizeCanvas() {
+            const rect = canvas.parentElement.getBoundingClientRect();
+            canvas.width = rect.width;
+            canvas.height = rect.height;
+
+            // Maintain road width proportional to canvas width
+            trackWidth = Math.min(canvas.width * 0.75, 420);
+            roadXMin = (canvas.width - trackWidth) / 2;
+            roadXMax = roadXMin + trackWidth;
+
+            // Reset player X position within bounds
+            if (!isGameRunning) {
+                player.x = canvas.width / 2 - player.width / 2;
+                player.y = canvas.height - 130;
+            } else {
+                player.x = Math.max(roadXMin + 10, Math.min(roadXMax - player.width - 10, player.x));
+            }
+        }
+        window.addEventListener('resize', resizeCanvas);
+
+        // CONTROLS LISTENERS (Keyboard & Touch)
+        window.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowLeft' || e.key === 'a' || e.key === 'A') keys.left = true;
+            if (e.key === 'ArrowRight' || e.key === 'd' || e.key === 'D') keys.right = true;
+            if (e.key === 'ArrowUp' || e.key === 'w' || e.key === 'W') keys.up = true;
+            if (e.key === 'ArrowDown' || e.key === 's' || e.key === 'S') keys.down = true;
+            if (e.key === ' ' || e.key === 'Shift') keys.nitro = true;
+        });
+
+        window.addEventListener('keyup', (e) => {
+            if (e.key === 'ArrowLeft' || e.key === 'a' || e.key === 'A') keys.left = false;
+            if (e.key === 'ArrowRight' || e.key === 'd' || e.key === 'D') keys.right = false;
+            if (e.key === 'ArrowUp' || e.key === 'w' || e.key === 'W') keys.up = false;
+            if (e.key === 'ArrowDown' || e.key === 's' || e.key === 'S') keys.down = false;
+            if (e.key === ' ' || e.key === 'Shift') keys.nitro = false;
+        });
+
+        // Touch Control Buttons Setup
+        const setupTouchBtn = (id, keyName) => {
+            const btn = document.getElementById(id);
+            if (!btn) return;
+
+            const start = (e) => {
+                e.preventDefault();
+                keys[keyName] = true;
+                btn.classList.add('active');
+                audio.init();
+            };
+            const end = (e) => {
+                e.preventDefault();
+                keys[keyName] = false;
+                btn.classList.remove('active');
+            };
+
+            btn.addEventListener('touchstart', start, {passive: false});
+            btn.addEventListener('touchend', end, {passive: false});
+            btn.addEventListener('mousedown', start);
+            btn.addEventListener('mouseup', end);
+        };
+
+        setupTouchBtn('btn-left', 'left');
+        setupTouchBtn('btn-right', 'right');
+        setupTouchBtn('btn-brake', 'down');
+        setupTouchBtn('btn-nitro', 'nitro');
+
+        // AUDIO TOGGLE
+        if (audioBtn) {
+            audioBtn.addEventListener('click', () => {
+                audio.muted = !audio.muted;
+                audioBtn.innerHTML = audio.muted ? 
+                    '<i class="fa-solid fa-volume-xmark text-rose-500"></i>' : 
+                    '<i class="fa-solid fa-volume-high text-cyan-400"></i>';
+            });
+        }
+
+        // SPAWN PADS (BOOST & SLOW HAZARD)
+        function spawnPad() {
+            const type = Math.random() < 0.5 ? 'boost' : 'slow';
+            const width = 60;
+            const height = 90;
+            // Spawn random across road lanes
+            const x = roadXMin + 25 + Math.random() * (trackWidth - width - 50);
+
+            pads.push({
+                x: x,
+                y: -height - 20,
+                width: width,
+                height: height,
+                type: type, // 'boost' or 'slow'
+                passed: false
+            });
+        }
+
+        // SPAWN OBSTACLES (ENEMIES/BARRIERS)
+        function spawnObstacle() {
+            const width = 40 + Math.random() * 20;
+            const height = 65 + Math.random() * 15;
+            const x = roadXMin + 20 + Math.random() * (trackWidth - width - 40);
+            const speed = 2 + Math.random() * 3;
+
+            obstacles.push({
+                x: x,
+                y: -height - 50,
+                width: width,
+                height: height,
+                speed: speed,
+                color: Math.random() > 0.5 ? '#ff0055' : '#a855f7'
+            });
+        }
+
+        // DRAW PAD DENGAN SIMBOL PANAH NEON YANG SANGAT JELAS
+        function drawPad(pad) {
+            ctx.save();
+
+            if (pad.type === 'boost') {
+                // ===============================================
+                // BOOST PAD: SIMBOL PANAH NEON KE ATAS (▲▲▲)
+                // ===============================================
+                
+                // Outer Glow & Base Pad Frame
+                ctx.shadowColor = '#00ffcc';
+                ctx.shadowBlur = 15;
+                ctx.fillStyle = 'rgba(0, 40, 35, 0.85)';
+                ctx.strokeStyle = '#00ffcc';
+                ctx.lineWidth = 3;
+
+                ctx.beginPath();
+                ctx.roundRect(pad.x, pad.y, pad.width, pad.height, 8);
+                ctx.fill();
+                ctx.stroke();
+
+                // Bright Side Borders
+                ctx.fillStyle = '#00f3ff';
+                ctx.fillRect(pad.x, pad.y, 4, pad.height);
+                ctx.fillRect(pad.x + pad.width - 4, pad.y, 4, pad.height);
+
+                // ANIMATED NEON ARROWS POINTING UP (PANAH KE ATAS)
+                ctx.fillStyle = '#00ffcc';
+                ctx.shadowBlur = 12;
+
+                const arrowHeight = 16;
+                const spacing = 22;
+                // Offset animasi untuk efek bergerak melaju ke atas
+                const animatedYOffset = (animOffset * 2) % spacing;
+
+                for (let y = pad.y + pad.height - 10 + animatedYOffset; y > pad.y + 10; y -= spacing) {
+                    if (y - arrowHeight < pad.y + 5 || y > pad.y + pad.height - 5) continue;
+
+                    ctx.beginPath();
+                    // Draw Upward Chevron/Arrow
+                    const centerX = pad.x + pad.width / 2;
+                    ctx.moveTo(centerX, y - arrowHeight); // Tip (Pointing Up)
+                    ctx.lineTo(pad.x + pad.width - 12, y); // Bottom Right
+                    ctx.lineTo(pad.x + pad.width - 20, y); // Inner Right
+                    ctx.lineTo(centerX, y - arrowHeight + 8); // Inner Tip
+                    ctx.lineTo(pad.x + 20, y); // Inner Left
+                    ctx.lineTo(pad.x + 12, y); // Bottom Left
+                    ctx.closePath();
+                    ctx.fill();
+                }
+
+                // Text Badge Indicator
+                ctx.shadowBlur = 0;
+                ctx.font = '900 10px Orbitron';
+                ctx.fillStyle = '#00ffcc';
+                ctx.textAlign = 'center';
+                ctx.fillText('BOOST ▲', pad.x + pad.width / 2, pad.y + pad.height - 4);
+
+            } else {
+                // ===============================================
+                // SLOW PAD: SIMBOL PANAH NEON KE BAWAH (▼▼▼)
+                // ===============================================
+
+                // Outer Glow & Base Pad Frame
+                ctx.shadowColor = '#ff0055';
+                ctx.shadowBlur = 15;
+                ctx.fillStyle = 'rgba(50, 5, 20, 0.85)';
+                ctx.strokeStyle = '#ff0055';
+                ctx.lineWidth = 3;
+
+                ctx.beginPath();
+                ctx.roundRect(pad.x, pad.y, pad.width, pad.height, 8);
+                ctx.fill();
+                ctx.stroke();
+
+                // Warning Stripes / Border Red
+                ctx.fillStyle = '#ff0055';
+                ctx.fillRect(pad.x, pad.y, 4, pad.height);
+                ctx.fillRect(pad.x + pad.width - 4, pad.y, 4, pad.height);
+
+                // ANIMATED NEON ARROWS POINTING DOWN (PANAH KE BAWAH)
+                ctx.fillStyle = '#ff0055';
+                ctx.shadowBlur = 12;
+
+                const arrowHeight = 16;
+                const spacing = 22;
+                // Offset animasi bergerak menunjuk ke bawah (perlambat)
+                const animatedYOffset = (animOffset * 2) % spacing;
+
+                for (let y = pad.y + 10 - animatedYOffset; y < pad.y + pad.height - 10; y += spacing) {
+                    if (y + arrowHeight > pad.y + pad.height - 5 || y < pad.y + 5) continue;
+
+                    ctx.beginPath();
+                    // Draw Downward Chevron/Arrow
+                    const centerX = pad.x + pad.width / 2;
+                    ctx.moveTo(centerX, y + arrowHeight); // Tip (Pointing Down)
+                    ctx.lineTo(pad.x + pad.width - 12, y); // Top Right
+                    ctx.lineTo(pad.x + pad.width - 20, y); // Inner Right
+                    ctx.lineTo(centerX, y + arrowHeight - 8); // Inner Tip
+                    ctx.lineTo(pad.x + 20, y); // Inner Left
+                    ctx.lineTo(pad.x + 12, y); // Top Left
+                    ctx.closePath();
+                    ctx.fill();
+                }
+
+                // Text Badge Indicator
+                ctx.shadowBlur = 0;
+                ctx.font = '900 10px Orbitron';
+                ctx.fillStyle = '#ff3366';
+                ctx.textAlign = 'center';
+                ctx.fillText('SLOW ▼', pad.x + pad.width / 2, pad.y + 12);
+            }
+
+            ctx.restore();
+        }
+
+        // DRAW PLAYER FUTURISTIC CAR
+        function drawPlayer() {
+            ctx.save();
+            ctx.translate(player.x + player.width / 2, player.y + player.height / 2);
+
+            // Steering tilt angle
+            let tilt = 0;
+            if (keys.left) tilt = -0.08;
+            if (keys.right) tilt = 0.08;
+            ctx.rotate(tilt);
+
+            // Car Exhaust Flame / Trail Effect
+            if (player.speed > 2) {
+                const flameLength = (player.speed / player.maxSpeed) * 25 + (player.isBoosting ? 20 : 0);
+                ctx.shadowColor = player.isBoosting ? '#00f3ff' : '#ff0055';
+                ctx.shadowBlur = 15;
+                ctx.fillStyle = player.isBoosting ? '#00ffff' : '#ff5500';
+
+                ctx.beginPath();
+                ctx.moveTo(-player.width / 4, player.height / 2);
+                ctx.lineTo(0, player.height / 2 + flameLength + Math.random() * 8);
+                ctx.lineTo(player.width / 4, player.height / 2);
+                ctx.closePath();
+                ctx.fill();
+            }
+
+            // Car Body Glow
+            const mainNeonColor = player.isBoosting ? '#00ffcc' : (player.isSlowed ? '#ff0055' : '#00f3ff');
+            ctx.shadowColor = mainNeonColor;
+            ctx.shadowBlur = 18;
+
+            // Main Cyber Body Chassis
+            ctx.fillStyle = '#0a0a16';
+            ctx.strokeStyle = mainNeonColor;
+            ctx.lineWidth = 2.5;
+
+            ctx.beginPath();
+            ctx.roundRect(-player.width / 2, -player.height / 2, player.width, player.height, 10);
+            ctx.fill();
+            ctx.stroke();
+
+            // Cockpit Windshield (Glass Cyan Glow)
+            ctx.fillStyle = mainNeonColor;
+            ctx.beginPath();
+            ctx.roundRect(-player.width / 3, -player.height / 4, (player.width * 2) / 3, player.height / 3, 4);
+            ctx.fill();
+
+            // Headlights Neon
+            ctx.shadowColor = '#ffffff';
+            ctx.shadowBlur = 10;
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(-player.width / 2 + 4, -player.height / 2 - 2, 8, 4);
+            ctx.fillRect(player.width / 2 - 12, -player.height / 2 - 2, 8, 4);
+
+            // Side Neon Strips
+            ctx.fillStyle = mainNeonColor;
+            ctx.fillRect(-player.width / 2 - 2, -player.height / 4, 2, player.height / 2);
+            ctx.fillRect(player.width / 2, -player.height / 4, 2, player.height / 2);
+
+            ctx.restore();
+        }
+
+        // DRAW OBSTACLES
+        function drawObstacle(obs) {
+            ctx.save();
+            ctx.shadowColor = obs.color;
+            ctx.shadowBlur = 12;
+
+            ctx.fillStyle = '#111827';
+            ctx.strokeStyle = obs.color;
+            ctx.lineWidth = 2;
+
+            ctx.beginPath();
+            ctx.roundRect(obs.x, obs.y, obs.width, obs.height, 6);
+            ctx.fill();
+            ctx.stroke();
+
+            // Red Tail Lights
+            ctx.fillStyle = obs.color;
+            ctx.fillRect(obs.x + 4, obs.y + obs.height - 4, 8, 3);
+            ctx.fillRect(obs.x + obs.width - 12, obs.y + obs.height - 4, 8, 3);
+
+            ctx.restore();
+        }
+
+        // DRAW ROAD & SYNTHWAVE GRID BACKGROUND
+        function drawRoad() {
+            // Background Dark Space
+            ctx.fillStyle = '#04040c';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // Outer Grid Lines (Synthwave Environment)
+            ctx.strokeStyle = 'rgba(255, 0, 85, 0.15)';
+            ctx.lineWidth = 1;
+            const gridSpacing = 40;
+            const gridY = (gameTime * player.speed * 2) % gridSpacing;
+
+            for (let x = 0; x < canvas.width; x += gridSpacing) {
+                ctx.beginPath();
+                ctx.moveTo(x, 0);
+                ctx.lineTo(x, canvas.height);
+                ctx.stroke();
+            }
+            for (let y = gridY; y < canvas.height; y += gridSpacing) {
+                ctx.beginPath();
+                ctx.moveTo(0, y);
+                ctx.lineTo(canvas.width, y);
+                ctx.stroke();
+            }
+
+            // Main Road Surface
+            ctx.fillStyle = '#080814';
+            ctx.fillRect(roadXMin, 0, trackWidth, canvas.height);
+
+            // Neon Road Borders
+            ctx.shadowBlur = 15;
+            
+            // Left Neon Boundary (Cyan)
+            ctx.shadowColor = '#00f3ff';
+            ctx.fillStyle = '#00f3ff';
+            ctx.fillRect(roadXMin - 4, 0, 4, canvas.height);
+
+            // Right Neon Boundary (Pink)
+            ctx.shadowColor = '#ff0055';
+            ctx.fillStyle = '#ff0055';
+            ctx.fillRect(roadXMax, 0, 4, canvas.height);
+
+            // Animated Center Lane Dashes
+            ctx.shadowBlur = 0;
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.25)';
+            ctx.setLineDash([30, 30]);
+            ctx.lineDashOffset = -gameTime * player.speed * 3;
+            ctx.lineWidth = 4;
+
+            // 2 Lane Markers
+            const laneWidth = trackWidth / 3;
+            for (let i = 1; i <= 2; i++) {
+                ctx.beginPath();
+                ctx.moveTo(roadXMin + laneWidth * i, 0);
+                ctx.lineTo(roadXMin + laneWidth * i, canvas.height);
+                ctx.stroke();
+            }
+            ctx.setLineDash([]); // Reset dash
+        }
+
+        // PARTICLES EFFECT SYSTEM
+        function createParticles(x, y, color, count = 10) {
+            for (let i = 0; i < count; i++) {
+                particles.push({
+                    x: x,
+                    y: y,
+                    vx: (Math.random() - 0.5) * 8,
+                    vy: (Math.random() - 0.5) * 8,
+                    size: Math.random() * 4 + 2,
+                    color: color,
+                    life: 1.0
+                });
+            }
+        }
+
+        function updateAndDrawParticles() {
+            for (let i = particles.length - 1; i >= 0; i--) {
+                const p = particles[i];
+                p.x += p.vx;
+                p.y += p.vy;
+                p.life -= 0.04;
+
+                if (p.life <= 0) {
+                    particles.splice(i, 1);
+                    continue;
+                }
+
+                ctx.save();
+                ctx.globalAlpha = p.life;
+                ctx.fillStyle = p.color;
+                ctx.shadowColor = p.color;
+                ctx.shadowBlur = 8;
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.restore();
+            }
+        }
+
+        // COLLISION DETECTION (AABB)
+        function checkCollision(rect1, rect2) {
+            return (
+                rect1.x < rect2.x + rect2.width &&
+                rect1.x + rect1.width > rect2.x &&
+                rect1.y < rect2.y + rect2.height &&
+                rect1.y + rect1.height > rect2.y
+            );
+        }
+
+        // MAIN UPDATE GAME LOGIC
+        function update() {
+            gameTime++;
+            animOffset = (animOffset + 0.5) % 100;
+
+            // Acceleration & Controls Logic
+            if (keys.up) {
+                player.speed += player.acceleration;
+            } else if (keys.down) {
+                player.speed -= player.acceleration * 1.5;
+            } else {
+                // Natural deceleration
+                player.speed *= player.friction;
+            }
+
+            // Nitro Boost Handling
+            if (keys.nitro && player.nitro > 0 && player.speed > 2) {
+                player.speed += player.acceleration * 2;
+                player.nitro = Math.max(0, player.nitro - 0.8);
+                createParticles(player.x + player.width / 2, player.y + player.height, '#ffe600', 2);
+            } else if (player.nitro < 100) {
+                player.nitro = Math.min(100, player.nitro + 0.1); // Slowly recharge
+            }
+
+            // Boost & Slow Effect Timers
+            if (player.boostTimer > 0) {
+                player.boostTimer--;
+                player.maxSpeed = player.boostMaxSpeed;
+                if (player.boostTimer === 0) player.isBoosting = false;
+            } else if (player.slowTimer > 0) {
+                player.slowTimer--;
+                player.maxSpeed = 6; // Cap low max speed
+                if (player.slowTimer === 0) player.isSlowed = false;
+            } else {
+                player.maxSpeed = player.baseMaxSpeed;
+            }
+
+            // Clamp Speed
+            player.speed = Math.max(0, Math.min(player.speed, player.maxSpeed));
+
+            // Steering Logic
+            if (keys.left) player.x -= player.steerSpeed;
+            if (keys.right) player.x += player.steerSpeed;
+
+            // Keep player within road boundaries
+            if (player.x < roadXMin + 5) {
+                player.x = roadXMin + 5;
+                player.speed *= 0.92; // Wall friction penalty
+            }
+            if (player.x + player.width > roadXMax - 5) {
+                player.x = roadXMax - 5 - player.width;
+                player.speed *= 0.92;
+            }
+
+            // Distance & Score Calculation
+            distanceScored += Math.floor(player.speed * 0.8);
+
+            // Update Engine Sound Pitch
+            audio.updateEngine(player.speed / player.maxSpeed);
+
+            // SPAWN LOGIC
+            // Spawn Pads periodically
+            if (gameTime % 100 === 0) {
+                spawnPad();
+            }
+
+            // Spawn Obstacles periodically
+            if (gameTime % 120 === 0) {
+                spawnObstacle();
+            }
+
+            // UPDATE PADS
+            for (let i = pads.length - 1; i >= 0; i--) {
+                const pad = pads[i];
+                pad.y += player.speed; // Move down relative to player speed
+
+                // Check collision with player
+                if (!pad.passed && checkCollision(player, pad)) {
+                    pad.passed = true;
+
+                    if (pad.type === 'boost') {
+                        // LAJU PAD (SPEED BOOST)
+                        player.speed = player.boostMaxSpeed;
+                        player.isBoosting = true;
+                        player.isSlowed = false;
+                        player.boostTimer = 120; // 2 seconds boost
+                        createParticles(player.x + player.width / 2, player.y + player.height / 2, '#00ffcc', 25);
+                        audio.playBoostSound();
+                    } else {
+                        // PERLAMBAT PAD (SLOW BRAKE)
+                        player.speed = Math.max(2, player.speed * 0.3); // Drop speed immediately
+                        player.isSlowed = true;
+                        player.isBoosting = false;
+                        player.slowTimer = 90; // 1.5 seconds slow
+                        createParticles(player.x + player.width / 2, player.y + player.height / 2, '#ff0055', 25);
+                        audio.playSlowSound();
+                    }
+                }
+
+                // Remove off-screen pads
+                if (pad.y > canvas.height + 100) {
+                    pads.splice(i, 1);
+                }
+            }
+
+            // UPDATE OBSTACLES
+            for (let i = obstacles.length - 1; i >= 0; i--) {
+                const obs = obstacles[i];
+                obs.y += player.speed - obs.speed; // Relative speed
+
+                // Collision with player -> GAME OVER
+                if (checkCollision(player, obs)) {
+                    createParticles(player.x + player.width / 2, player.y + player.height / 2, '#ff0055', 40);
+                    audio.playCrashSound();
+                    gameOver();
+                    return;
+                }
+
+                // Remove offscreen
+                if (obs.y > canvas.height + 100) {
+                    obstacles.splice(i, 1);
+                }
+            }
+
+            // UPDATE UI HUD
+            scoreValEl.innerText = `${distanceScored}m`;
+            const speedKmh = Math.floor(player.speed * 18);
+            speedTextEl.innerText = `${speedKmh} KM/H`;
+
+            // Update SVG Speedometer Gauge
+            const speedPercent = Math.min(100, (player.speed / player.boostMaxSpeed) * 100);
+            speedGaugeEl.setAttribute('stroke-dasharray', `${speedPercent}, 100`);
+
+            // Update Nitro Bar
+            nitroBarEl.style.width = `${player.nitro}%`;
+            nitroTextEl.innerText = `${Math.floor(player.nitro)}%`;
+
+            // Update Multiplier & Status Badge
+            if (player.isBoosting) {
+                multiplierValEl.innerText = 'x2.0 BOOST!';
+                multiplierValEl.className = 'text-lg sm:text-2xl font-bold text-cyan-300 glow-cyan animate-bounce';
+                statusBadgeEl.className = 'flex items-center px-3 py-1 rounded-full bg-cyan-950 border border-cyan-400 text-cyan-300 text-xs font-bold animate-pulse';
+                statusBadgeEl.innerHTML = '<i class="fa-solid fa-angles-up mr-1"></i> LAJU (BOOST)';
+            } else if (player.isSlowed) {
+                multiplierValEl.innerText = 'x0.5 SLOWED';
+                multiplierValEl.className = 'text-lg sm:text-2xl font-bold text-rose-500 glow-pink';
+                statusBadgeEl.className = 'flex items-center px-3 py-1 rounded-full bg-rose-950 border border-rose-500 text-rose-400 text-xs font-bold animate-pulse';
+                statusBadgeEl.innerHTML = '<i class="fa-solid fa-angles-down mr-1"></i> PERLAMBAT';
+            } else {
+                multiplierValEl.innerText = 'x1.0';
+                multiplierValEl.className = 'text-lg sm:text-2xl font-bold text-pink-500 glow-pink';
+                statusBadgeEl.className = 'hidden sm:flex items-center px-3 py-1 rounded-full bg-slate-900 border border-slate-700 text-gray-400 text-xs font-bold';
+                statusBadgeEl.innerHTML = '<i class="fa-solid fa-bolt mr-1"></i> NORMAL';
+            }
+        }
+
+        // RENDER LOOP
+        function render() {
+            drawRoad();
+
+            // Draw Pads (Boost & Slow)
+            pads.forEach(drawPad);
+
+            // Draw Obstacles
+            obstacles.forEach(drawObstacle);
+
+            // Draw Player Car
+            drawPlayer();
+
+            // Draw Particle Effects
+            updateAndDrawParticles();
+        }
+
+        // MAIN GAME LOOP
+        function gameLoop() {
+            if (!isGameRunning) return;
+
+            update();
+            render();
+
+            animationFrameId = requestAnimationFrame(gameLoop);
+        }
+
+        // START GAME
+        function startGame() {
+            audio.init();
+            resizeCanvas();
+
+            // Reset States
+            isGameRunning = true;
+            distanceScored = 0;
+            gameTime = 0;
+            pads = [];
+            obstacles = [];
+            particles = [];
+
+            player.x = canvas.width / 2 - player.width / 2;
+            player.y = canvas.height - 130;
+            player.speed = 5;
+            player.nitro = 100;
+            player.isBoosting = false;
+            player.isSlowed = false;
+
+            // Auto-press forward for immediate drive
+            keys.up = true;
+
+            menuOverlay.classList.add('hidden');
+
+            if (animationFrameId) cancelAnimationFrame(animationFrameId);
+            gameLoop();
+        }
+
+        // GAME OVER
+        function gameOver() {
+            isGameRunning = false;
+            if (animationFrameId) cancelAnimationFrame(animationFrameId);
+
+            overlayMsg.innerHTML = `
+                <span class="text-rose-500 font-bold text-xl block mb-1">TABRAKAN TERJADI!</span>
+                Skor Jarak Akhir Anda: <strong class="text-cyan-300 text-2xl font-mono">${distanceScored}m</strong>
+            `;
+            startBtn.innerHTML = '<i class="fa-solid fa-rotate-right"></i> MAIN LAGI';
+            menuOverlay.classList.remove('hidden');
+        }
+
+        // START BUTTON EVENT
+        startBtn.addEventListener('click', startGame);
+
+        // INITIAL LOAD RESIZE
+        window.onload = () => {
+            resizeCanvas();
+            render(); // Initial static frame
+        };
+    </script>
+</body>
+</html>
